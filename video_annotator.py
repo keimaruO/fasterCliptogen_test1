@@ -33,25 +33,50 @@ def sentence_parse_and_line_parse(text, max_line_length=15, max_lines=4):
         parsed_text_list.append(current_line.strip())
 
     return parsed_text_list[:max_lines]
+def add_subtitles_to_video(input_video_path, subtitles, output_video_path, font_path):
+    video = VideoFileClip(input_video_path)
+    clips = []
 
-def annotate(clip, txt, max_line_length=15, max_lines=4):
+    for subtitle in subtitles:
+        start_time = datetime.timedelta(hours=subtitle['start'].hour, minutes=subtitle['start'].minute, seconds=subtitle['start'].second, microseconds=subtitle['start'].microsecond).total_seconds()
+        end_time = datetime.timedelta(hours=subtitle['end'].hour, minutes=subtitle['end'].minute, seconds=subtitle['end'].second, microseconds=subtitle['end'].microsecond).total_seconds()
+        clip = video.subclip(start_time, end_time)
+        annotated_clip = annotate(clip, subtitle['text'], font_path)
+        clips.append(annotated_clip)
+
+    final_clip = concatenate_videoclips(clips)
+    final_clip.write_videofile(output_video_path, fps=24, codec='libx264', audio_codec='aac')
+
+    # Close the video clips to free up memory
+    video.close()
+    for clip in clips:
+        clip.close()
+    final_clip.close()
+font_path = 'C:/USERS/KEI11/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/NOTOSANSJP-BLACK.TTF'
+
+
+def annotate(clip, txt, font_path, max_line_length=15, max_lines=4):
+    video_width, video_height = clip.size
+    fontsize = int(video_height * 0.08)
+
     parsed_txt_list = sentence_parse_and_line_parse(txt, max_line_length, max_lines)
     parsed_txt = "\n".join(parsed_txt_list)
+
     txtclip_white = TextClip(parsed_txt,
-        fontsize=75,
-        font='C:/USERS/KEI11/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/NOTOSANSJP-BLACK.TTF',
+        fontsize=fontsize,
+        font=font_path,
         color='white'
     )
     txtclip_black = TextClip(parsed_txt,
-        fontsize=75,
-        font='C:/USERS/KEI11/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/NOTOSANSJP-BLACK.TTF',
+        fontsize=fontsize,
+        font=font_path,
         color='black',
         stroke_color="#000000",
         stroke_width=7
     )
     txtclip_ffa3aa = TextClip(parsed_txt,
-        fontsize=75,
-        font='C:/USERS/KEI11/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/NOTOSANSJP-BLACK.TTF',
+        fontsize=fontsize,
+        font=font_path,
         color='#FFA3AA',
         stroke_color="#FFA3AA",
         stroke_width=12
@@ -65,7 +90,8 @@ def annotate(clip, txt, max_line_length=15, max_lines=4):
     return cvc.set_duration(clip.duration)
 
 
-def add_subtitles_to_video(input_video_path, subtitles, output_video_path):
+
+def add_subtitles_to_video(input_video_path, subtitles, output_video_path, font_path):
     video = VideoFileClip(input_video_path)
     clips = []
 
@@ -73,18 +99,7 @@ def add_subtitles_to_video(input_video_path, subtitles, output_video_path):
         start_time = datetime.timedelta(hours=subtitle['start'].hour, minutes=subtitle['start'].minute, seconds=subtitle['start'].second, microseconds=subtitle['start'].microsecond).total_seconds()
         end_time = datetime.timedelta(hours=subtitle['end'].hour, minutes=subtitle['end'].minute, seconds=subtitle['end'].second, microseconds=subtitle['end'].microsecond).total_seconds()
         clip = video.subclip(start_time, end_time)
-        annotated_clip = annotate(clip, subtitle['text'])
-        clips.append
-
-def add_subtitles_to_video(input_video_path, subtitles, output_video_path):
-    video = VideoFileClip(input_video_path)
-    clips = []
-
-    for subtitle in subtitles:
-        start_time = datetime.timedelta(hours=subtitle['start'].hour, minutes=subtitle['start'].minute, seconds=subtitle['start'].second, microseconds=subtitle['start'].microsecond).total_seconds()
-        end_time = datetime.timedelta(hours=subtitle['end'].hour, minutes=subtitle['end'].minute, seconds=subtitle['end'].second, microseconds=subtitle['end'].microsecond).total_seconds()
-        clip = video.subclip(start_time, end_time)
-        annotated_clip = annotate(clip, subtitle['text'])
+        annotated_clip = annotate(clip, subtitle['text'], font_path)
         clips.append(annotated_clip)
 
     final_clip = concatenate_videoclips(clips)
